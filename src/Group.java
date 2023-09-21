@@ -25,4 +25,17 @@ public abstract class Group {
 		
 		return false;
 	}
+	
+	/*
+	public void updateCandidates()
+	{
+		for (int i = 0; i < 9; ++i)
+		{
+			if (fields[i].getStatus() != EFieldStatus.EFS_GAME)
+			{
+				for (int j = 0; j < )
+			}
+		}
+	}
+	*/
 }

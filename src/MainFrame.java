@@ -11,9 +11,11 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 
 public class MainFrame extends JPanel implements KeyListener {
 	
@@ -45,6 +47,9 @@ public class MainFrame extends JPanel implements KeyListener {
 	private static final int NUMBERPAD_UPPER_LEFT_CORNER_X = 700;
 	private static final int NUMBERPAD_UPPER_LEFT_CORNER_Y = 100;
 	
+	private static final int BUTTON_WIDTH = SQUARE_EDGE_LENGTH * 3 + ORDINARY_LINE_THICKNESS * 2;
+	private static final int BUTTON_HEIGHT = SQUARE_EDGE_LENGTH / 2;
+	
 	private static final Color SEMI_TRANSPARENT_RED = new Color(255, 0, 0, 64);
 	private static final Color SEMI_TRANSPARENT_YELLOW = new Color(0, 255, 255, 64);
 	
@@ -54,6 +59,8 @@ public class MainFrame extends JPanel implements KeyListener {
 	private IndexedLabel[]   numberFields;
 	private Font largeFont = new Font("Roboto", Font.PLAIN, 24);
 	private Font smallFont = new Font("Roboto", Font.PLAIN, 12);
+	
+	private boolean isCandidatesEnabled = true;
 	
 	private IndexedLabel selectedBoardField = null;
 	
@@ -85,7 +92,23 @@ public class MainFrame extends JPanel implements KeyListener {
 		
 		@Override
 		public void mouseClicked(MouseEvent e) {
-			setSelectedBoardField((IndexedLabel)e.getSource());
+			if (selectedBoardField == (IndexedLabel)e.getSource())
+			{
+				if (isCandidatesEnabled)
+				{
+					int mouseClickX = 3 * e.getX() / selectedBoardField.getBounds().width; 
+					int mouseClickY = 2 - 3 * e.getY() / selectedBoardField.getBounds().width;
+					
+					int index = 3 * mouseClickY + mouseClickX + 1;
+					engine.debugText = "You hit the number " + index;
+					
+					engine.getField(selectedBoardField.row, selectedBoardField.column).toggleCandidate(index);
+					
+					repaint();
+				}
+			}
+			else
+				setSelectedBoardField((IndexedLabel)e.getSource());
 			
 			repaint();
 		}
@@ -114,13 +137,10 @@ public class MainFrame extends JPanel implements KeyListener {
 		@Override
 		public void mouseEntered(MouseEvent e) {
 			// TODO Auto-generated method stub
-			repaint();
 		}
 		
 		@Override
 		public void mouseClicked(MouseEvent e) {
-
-			
 			setSelectedBoardValue(((IndexedLabel)e.getSource()).index);
 		
 			repaint();
@@ -181,8 +201,7 @@ public class MainFrame extends JPanel implements KeyListener {
 			JButton deleteButton = new JButton();
 			
 			deleteButton.setBounds(NUMBERPAD_UPPER_LEFT_CORNER_X + SEPARATION_LINE_THICKNESS, y + SEPARATION_LINE_THICKNESS, 
-					SQUARE_EDGE_LENGTH * 3 + ORDINARY_LINE_THICKNESS * 2,
-					SQUARE_EDGE_LENGTH / 2);
+								   BUTTON_WIDTH, BUTTON_HEIGHT);
 			deleteButton.setText("X");
 			deleteButton.setFont(largeFont);
 			deleteButton.setHorizontalAlignment(JButton.CENTER);
@@ -199,8 +218,8 @@ public class MainFrame extends JPanel implements KeyListener {
 			
 			JButton runProcessingOnceButton = new JButton();
 			
-			runProcessingOnceButton.setBounds(deleteButton.getBounds().x, (int)(deleteButton.getBounds().y+1.5*deleteButton.getBounds().height),
-					deleteButton.getBounds().width, deleteButton.getBounds().height);
+			runProcessingOnceButton.setBounds(deleteButton.getBounds().x, (int)(deleteButton.getBounds().y+1.5*BUTTON_HEIGHT),
+											  BUTTON_WIDTH, BUTTON_HEIGHT);
 			runProcessingOnceButton.setText("Run processing once");
 			runProcessingOnceButton.setFont(smallFont);
 			runProcessingOnceButton.setHorizontalAlignment(JButton.CENTER);
@@ -216,7 +235,34 @@ public class MainFrame extends JPanel implements KeyListener {
 				    }).start();
 				}
 			});
+			
 			add(runProcessingOnceButton);
+
+			JLabel showCandidatesLabel = new JLabel("Show candidates");
+			showCandidatesLabel.setBounds(runProcessingOnceButton.getBounds().x, (int)(runProcessingOnceButton.getBounds().y+1.5*BUTTON_HEIGHT), 
+					showCandidatesLabel.getPreferredSize().width, showCandidatesLabel.getPreferredSize().height);
+			showCandidatesLabel.setFocusable(false);
+
+			add(showCandidatesLabel);
+
+			
+			JCheckBox showCandidatesCheckBox = new JCheckBox();
+			showCandidatesCheckBox.setBounds(runProcessingOnceButton.getBounds().x + BUTTON_WIDTH - showCandidatesCheckBox.getPreferredSize().width, 
+											 (int)(runProcessingOnceButton.getBounds().y+1.5*BUTTON_HEIGHT), 0, 0);
+			showCandidatesCheckBox.setSize(showCandidatesCheckBox.getPreferredSize());
+			showCandidatesCheckBox.setFocusable(false);
+			showCandidatesCheckBox.setSelected(isCandidatesEnabled);
+			showCandidatesCheckBox.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					isCandidatesEnabled = showCandidatesCheckBox.isSelected();
+					engine.debugText = "Candidate selection enabled is now " + isCandidatesEnabled; 
+					repaint();
+				}
+			});
+
+			add(showCandidatesCheckBox);
 		}
 		
 		boardFields = new IndexedLabel[9][9];
@@ -266,6 +312,7 @@ public class MainFrame extends JPanel implements KeyListener {
 
 	    // Draw debug data
 	    {
+	    	g.setFont(largeFont);
 		    g.setColor(Color.BLACK);
 		    g.drawString(engine.debugText, FIELD_UPPER_LEFT_CORNER_X, 700);
 	    }
@@ -310,6 +357,43 @@ public class MainFrame extends JPanel implements KeyListener {
 		    	g.fillRect(x, FIELD_UPPER_LEFT_CORNER_Y, lineThickness, FIELD_LENGTH);
 		    	x += lineThickness + SQUARE_EDGE_LENGTH;
 		    }
+	    }
+	    
+	    // Draw the candidates
+	    if (isCandidatesEnabled)
+	    {
+	    	g.setFont(smallFont);
+			for (int row = 0; row < 9; ++row)
+				for (int column = 0; column < 9; ++column)
+				{
+					Field currentField = engine.getField(row, column);
+					if (currentField.isSolved() == EFieldStatus.EFS_UNSOLVED)
+					{
+						int topLeftCornerX = boardFields[row][column].getBounds().x;
+						int topLeftCornerY = boardFields[row][column].getBounds().y;
+						
+						if (currentField.getCandidate(7))
+							g.drawString("7", topLeftCornerX + 3, topLeftCornerY + getFontMetrics(smallFont).getHeight()-3);
+						if (currentField.getCandidate(8))
+							g.drawString("8", topLeftCornerX - 3 + SQUARE_EDGE_LENGTH / 2, topLeftCornerY + getFontMetrics(smallFont).getHeight()-3);
+						if (currentField.getCandidate(9))
+							g.drawString("9", topLeftCornerX + SQUARE_EDGE_LENGTH - 8, topLeftCornerY + getFontMetrics(smallFont).getHeight()-3);
+						
+						if (currentField.getCandidate(4))
+							g.drawString("4", topLeftCornerX + 3, topLeftCornerY + getFontMetrics(smallFont).getHeight() + SQUARE_EDGE_LENGTH / 2 - 14);
+						if (currentField.getCandidate(5))
+							g.drawString("5", topLeftCornerX - 3 + SQUARE_EDGE_LENGTH / 2, topLeftCornerY + getFontMetrics(smallFont).getHeight() + SQUARE_EDGE_LENGTH / 2 - 14);
+						if (currentField.getCandidate(6))
+							g.drawString("6", topLeftCornerX + SQUARE_EDGE_LENGTH - 8, topLeftCornerY + getFontMetrics(smallFont).getHeight() + SQUARE_EDGE_LENGTH / 2 - 14);
+						
+						if (currentField.getCandidate(1))
+							g.drawString("1", topLeftCornerX + 3, topLeftCornerY + getFontMetrics(smallFont).getHeight() + SQUARE_EDGE_LENGTH - 24);
+						if (currentField.getCandidate(2))
+							g.drawString("2", topLeftCornerX - 3 + SQUARE_EDGE_LENGTH / 2, topLeftCornerY + getFontMetrics(smallFont).getHeight() + SQUARE_EDGE_LENGTH - 24);
+						if (currentField.getCandidate(3))
+							g.drawString("3", topLeftCornerX + SQUARE_EDGE_LENGTH - 8, topLeftCornerY + getFontMetrics(smallFont).getHeight() + SQUARE_EDGE_LENGTH - 24);
+					}
+				}
 	    }
 	    
 	    
@@ -364,36 +448,6 @@ public class MainFrame extends JPanel implements KeyListener {
 	    	
 	    }
 	    
-	    /*
-	    // Paint horizontal line
-	    if (selectedBoardField != null)
-	    {
-	    	g.setColor(SEMI_TRANSPARENT_YELLOW);
-	    	g.fillRect(UPPER_LEFT_CORNER_X, selectedBoardField.getBounds().y, 
-	    			FIELD_LENGTH, selectedBoardField.getBounds().height);
-	    }
-	    
-	    // Paint vertical line
-	    if (selectedBoardField != null)
-	    {
-	    	g.setColor(SEMI_TRANSPARENT_YELLOW);
-	    	g.fillRect(selectedBoardField.getBounds().x, UPPER_LEFT_CORNER_Y, 
-	    			selectedBoardField.getBounds().width, FIELD_LENGTH);
-	    }
-	    
-	    // Paint box
-	    if (selectedBoardField != null)
-	    {
-	    	g.setColor(SEMI_TRANSPARENT_YELLOW);
-	    	int startX = UPPER_LEFT_CORNER_X + SEPARATION_LINE_THICKNESS;
-	    	while (selectedBoardField.getBounds().x >= startX + GROUP_EDGE_LENGTH + SEPARATION_LINE_THICKNESS)
-	    		startX += GROUP_EDGE_LENGTH + SEPARATION_LINE_THICKNESS;
-	    	int startY = UPPER_LEFT_CORNER_Y + SEPARATION_LINE_THICKNESS;
-	    	while (selectedBoardField.getBounds().y >= startY + GROUP_EDGE_LENGTH + SEPARATION_LINE_THICKNESS)
-	    		startY += GROUP_EDGE_LENGTH + SEPARATION_LINE_THICKNESS;
-	    	g.fillRect(startX, startY, GROUP_EDGE_LENGTH, GROUP_EDGE_LENGTH);
-	    }
-	    */
 	}
 
 	public static void main(String[] args) {
@@ -422,7 +476,12 @@ public class MainFrame extends JPanel implements KeyListener {
 		if (selectedBoardField != null)
 		{
 			if ((keyPressed >= '1') && (keyPressed <= '9'))
-				setSelectedBoardValue(keyPressed - '0');
+			{
+				if (MainFrame.this.isCandidatesEnabled && ((e.getModifiersEx() & KeyEvent.SHIFT_DOWN_MASK) == KeyEvent.SHIFT_DOWN_MASK))
+					engine.getField(selectedBoardField.row, selectedBoardField.column).toggleCandidate(keyPressed - '0');
+				else
+					setSelectedBoardValue(keyPressed - '0');
+			}
 			else if ((keyPressed == '0') || (keyPressed == KeyEvent.VK_DELETE))
 				setSelectedBoardValue(0);
 			else if (keyPressed == KeyEvent.VK_LEFT)
@@ -509,7 +568,4 @@ public class MainFrame extends JPanel implements KeyListener {
 			engine.setFieldCurrentValue(row, column, 0);
 		}
 	}
-	
-	
-
 }
