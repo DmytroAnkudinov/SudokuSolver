@@ -45,12 +45,17 @@ public class Field {
 	
 	public boolean getCandidate(int i)
 	{
-		return candidates[i];
+		return candidates[i - 1];
 	}
 	
 	public void setCandidate(int i, boolean value)
 	{
-		candidates[i] = value;
+		candidates[i - 1] = value;
+	}
+	
+	public void toggleCandidate(int i)
+	{
+		candidates[i - 1] = !candidates[i - 1];
 	}
 	
 	public EFieldStatus getStatus()
@@ -59,8 +64,13 @@ public class Field {
 			return status;
 		
 		return EFieldStatus.EFS_GAME;
-		
-		/*
+	}
+	
+	public EFieldStatus isSolved()
+	{
+		if (status == EFieldStatus.EFS_INITIAL)
+			return status;
+
 		if (currentValue == 0)
 			return EFieldStatus.EFS_UNSOLVED;
 
@@ -68,6 +78,5 @@ public class Field {
 			return EFieldStatus.EFS_SOLVED_CORRECTLY;
 		
 		return EFieldStatus.EFS_SOLVED_INCORRECTLY;
-		*/
 	}
 }
