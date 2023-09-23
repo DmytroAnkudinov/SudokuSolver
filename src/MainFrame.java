@@ -60,7 +60,10 @@ public class MainFrame extends JPanel implements KeyListener {
 	private Font largeFont = new Font("Roboto", Font.PLAIN, 24);
 	private Font smallFont = new Font("Roboto", Font.PLAIN, 12);
 	
+	private JCheckBox checkCandidatesCheckBox = null;
+	
 	private boolean isCandidatesEnabled = true;
+	private boolean isCandidatesChecked = false;
 	
 	private IndexedLabel selectedBoardField = null;
 	
@@ -256,13 +259,47 @@ public class MainFrame extends JPanel implements KeyListener {
 				
 				@Override
 				public void actionPerformed(ActionEvent e) {
+					 
 					isCandidatesEnabled = showCandidatesCheckBox.isSelected();
+					checkCandidatesCheckBox.setEnabled(isCandidatesEnabled);
+					//if (checkC)
 					engine.debugText = "Candidate selection enabled is now " + isCandidatesEnabled; 
 					repaint();
 				}
 			});
 
 			add(showCandidatesCheckBox);
+			
+			JLabel checkCandidatesLabel = new JLabel("Check candidates");
+			checkCandidatesLabel.setBounds(showCandidatesLabel.getBounds().x, (int)(showCandidatesLabel.getBounds().y+1.5*BUTTON_HEIGHT), 
+					checkCandidatesLabel.getPreferredSize().width, checkCandidatesLabel.getPreferredSize().height);
+			checkCandidatesLabel.setFocusable(false);
+
+			add(checkCandidatesLabel);
+
+			
+			checkCandidatesCheckBox = new JCheckBox();
+			checkCandidatesCheckBox.setBounds(showCandidatesLabel.getBounds().x + BUTTON_WIDTH - checkCandidatesCheckBox.getPreferredSize().width, 
+											 (int)(showCandidatesLabel.getBounds().y+1.5*BUTTON_HEIGHT), 0, 0);
+			checkCandidatesCheckBox.setSize(showCandidatesCheckBox.getPreferredSize());
+			checkCandidatesCheckBox.setFocusable(false);
+			checkCandidatesCheckBox.setSelected(isCandidatesChecked);
+			checkCandidatesCheckBox.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					isCandidatesChecked = checkCandidatesCheckBox.isSelected();
+					engine.debugText = "Candidate verification is now " + isCandidatesChecked; 
+					
+					if (isCandidatesChecked)
+						engine.recheckCandidates();
+					else
+						engine.resetCandidates();
+					repaint();
+				}
+			});
+
+			add(checkCandidatesCheckBox);
 		}
 		
 		boardFields = new IndexedLabel[9][9];
@@ -307,7 +344,7 @@ public class MainFrame extends JPanel implements KeyListener {
 	public void paintComponent(Graphics g)
 	{
 		super.paintComponent(g);
-	    Graphics2D g2 = (Graphics2D) g;
+	    //Graphics2D g2 = (Graphics2D) g;
 
 
 	    // Draw debug data
@@ -373,25 +410,55 @@ public class MainFrame extends JPanel implements KeyListener {
 						int topLeftCornerY = boardFields[row][column].getBounds().y;
 						
 						if (currentField.getCandidate(7))
+						{
+							g.setColor(currentField.getExcluded(7) ? Color.RED : Color.BLACK);
 							g.drawString("7", topLeftCornerX + 3, topLeftCornerY + getFontMetrics(smallFont).getHeight()-3);
+						}
 						if (currentField.getCandidate(8))
+						{
+							g.setColor(currentField.getExcluded(8) ? Color.RED : Color.BLACK);
 							g.drawString("8", topLeftCornerX - 3 + SQUARE_EDGE_LENGTH / 2, topLeftCornerY + getFontMetrics(smallFont).getHeight()-3);
+						}
 						if (currentField.getCandidate(9))
+						{
+							g.setColor(currentField.getExcluded(9) ? Color.RED : Color.BLACK);
 							g.drawString("9", topLeftCornerX + SQUARE_EDGE_LENGTH - 8, topLeftCornerY + getFontMetrics(smallFont).getHeight()-3);
+						}
 						
 						if (currentField.getCandidate(4))
+						{
+							g.setColor(currentField.getExcluded(4) ? Color.RED : Color.BLACK);
 							g.drawString("4", topLeftCornerX + 3, topLeftCornerY + getFontMetrics(smallFont).getHeight() + SQUARE_EDGE_LENGTH / 2 - 14);
+						}
 						if (currentField.getCandidate(5))
+						{
+							g.setColor(currentField.getExcluded(5) ? Color.RED : Color.BLACK);
 							g.drawString("5", topLeftCornerX - 3 + SQUARE_EDGE_LENGTH / 2, topLeftCornerY + getFontMetrics(smallFont).getHeight() + SQUARE_EDGE_LENGTH / 2 - 14);
+						}
+						
 						if (currentField.getCandidate(6))
+						{
+							g.setColor(currentField.getExcluded(6) ? Color.RED : Color.BLACK);
 							g.drawString("6", topLeftCornerX + SQUARE_EDGE_LENGTH - 8, topLeftCornerY + getFontMetrics(smallFont).getHeight() + SQUARE_EDGE_LENGTH / 2 - 14);
+						}
 						
 						if (currentField.getCandidate(1))
+						{
+							g.setColor(currentField.getExcluded(1) ? Color.RED : Color.BLACK);
 							g.drawString("1", topLeftCornerX + 3, topLeftCornerY + getFontMetrics(smallFont).getHeight() + SQUARE_EDGE_LENGTH - 24);
+						}
+						
 						if (currentField.getCandidate(2))
+						{
+							g.setColor(currentField.getExcluded(2) ? Color.RED : Color.BLACK);
 							g.drawString("2", topLeftCornerX - 3 + SQUARE_EDGE_LENGTH / 2, topLeftCornerY + getFontMetrics(smallFont).getHeight() + SQUARE_EDGE_LENGTH - 24);
+						}
+						
 						if (currentField.getCandidate(3))
+						{
+							g.setColor(currentField.getExcluded(3) ? Color.RED : Color.BLACK);
 							g.drawString("3", topLeftCornerX + SQUARE_EDGE_LENGTH - 8, topLeftCornerY + getFontMetrics(smallFont).getHeight() + SQUARE_EDGE_LENGTH - 24);
+						}
 					}
 				}
 	    }
@@ -548,10 +615,12 @@ public class MainFrame extends JPanel implements KeyListener {
 			return;
 		
 		setBoardValue(selectedBoardField.row, selectedBoardField.column, value);	
-		rowsChecked[selectedBoardField.row] = engine.getRow(selectedBoardField.row).runCheck();
-		columnsChecked[selectedBoardField.column] = engine.getColumn(selectedBoardField.column).runCheck();
-		squaresChecked[selectedBoardField.index] = engine.getSquare(selectedBoardField.index).runCheck();
-
+		rowsChecked[selectedBoardField.row] = engine.getRow(selectedBoardField.row).runRuleCheck();
+		columnsChecked[selectedBoardField.column] = engine.getColumn(selectedBoardField.column).runRuleCheck();
+		squaresChecked[selectedBoardField.index] = engine.getSquare(selectedBoardField.index).runRuleCheck();
+		
+		if (isCandidatesChecked)
+			engine.recheckCandidates();
 	}
 	
 	private void setBoardValue(int row, int column, int value)
@@ -567,5 +636,11 @@ public class MainFrame extends JPanel implements KeyListener {
 			boardFields[row][column].setText("");
 			engine.setFieldCurrentValue(row, column, 0);
 		}
+		
+		engine.debugText = engine.debugText = String.format("ROW : %d | COLUMN : %d | INDEX : %d | "
+				+ "actualValue : %d | currentValue : %s", 
+				selectedBoardField.row, selectedBoardField.column, selectedBoardField.index, 
+				engine.getField(row, column).getActualValue(),
+				engine.getField(row, column).getCurrentValue());
 	}
 }

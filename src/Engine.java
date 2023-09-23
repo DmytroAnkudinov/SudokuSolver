@@ -17,7 +17,7 @@ public class Engine {
 		Group.parent = this;
 		for (int row = 0; row < 9; ++row)
 			for (int column = 0; column < 9; ++column)
-				field[row][column] = new Field(row, column);		
+				field[row][column] = new Field();		
 	}
 	
 	public void initGroups()
@@ -51,7 +51,7 @@ public class Engine {
 		if ((row < 0) || (row > 8) || (column < 0) || (column > 8) || (value <= 0) || (value > 9))
 			return false;
 		
-		field[row][column] = new Field(row, column, value);
+		field[row][column] = new Field(value);
 		return true;
 	}
 	
@@ -103,6 +103,25 @@ public class Engine {
 		EProcessingStatus result = EProcessingStatus.EPS_NO_NEW_DATA;
 		
 		return result;
+	}
+	
+	public void resetCandidates()
+	{
+		for (int row = 0; row < 9; ++row)
+			for (int column = 0; column < 9; ++column)
+				field[row][column].resetCandidates();
+	}
+	
+	public void recheckCandidates()
+	{
+		resetCandidates();
+			
+		for (int i = 0; i < 9; ++i)
+		{
+			rows[i].runCandidateCheck();
+			columns[i].runCandidateCheck();
+			squares[i].runCandidateCheck();
+		}
 	}
 	
 	public EProcessingStatus performOneProcessingRun()
