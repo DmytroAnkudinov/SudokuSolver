@@ -11,7 +11,7 @@ public abstract class Group {
 		fields = new Field[9];
 	}
 	
-	public boolean runCheck() 
+	public boolean runRuleCheck() 
 	{
 		for (int i = 0; i < 8; ++i)
 		{
@@ -24,6 +24,24 @@ public abstract class Group {
 		}
 		
 		return false;
+	}
+		
+	public void runCandidateCheck()
+	{
+		for (int i = 0; i < 9; ++i)
+		{
+			if (fields[i].getCurrentValue() == 0)
+				continue;
+			
+			for (int j = 0; j < 9; ++j)
+			{
+				if (fields[j].getStatus() != EFieldStatus.EFS_GAME)
+					continue;
+				
+				fields[j].setCandidate(fields[i].getCurrentValue(), false);
+				fields[j].setExcluded(fields[i].getCurrentValue(), true);
+			}
+		}
 	}
 	
 	/*

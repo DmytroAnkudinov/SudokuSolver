@@ -1,32 +1,41 @@
 
 public class Field {
 	private EFieldStatus status;
-	private int row;
-	private int column;
 	private int actualValue;
 	private int currentValue;
 	private boolean[] candidates;
+	private boolean[] excluded;
 	
-	public Field(int row, int column, int initialValue)
+	public Field(int initialValue)
 	{
-		this.row = row;
-		this.column = column;
 		this.actualValue = initialValue;
 		this.currentValue = initialValue;
 		this.status = EFieldStatus.EFS_INITIAL;
 		candidates = null;
+		excluded = null;
 	}
 	
-	public Field(int row, int column)
+	public Field()
 	{
-		this.row = row;
-		this.column = column;
 		this.actualValue = 0;
 		this.status = EFieldStatus.EFS_GAME;
 		candidates = new boolean[9];
-		for (int i = 0; i < 9; ++i)
-			candidates[i] = true;
+		excluded = new boolean[9];
+		resetCandidates();
 	}
+	
+	public void resetCandidates()
+	{
+		if (status != EFieldStatus.EFS_GAME)
+			return;
+		
+		for (int i = 0; i < 9; ++i)
+		{
+			candidates[i] = true;
+			excluded[i] = false;
+		}
+	}
+
 	
 	public int getCurrentValue()
 	{
@@ -56,6 +65,16 @@ public class Field {
 	public void toggleCandidate(int i)
 	{
 		candidates[i - 1] = !candidates[i - 1];
+	}
+	
+	public boolean getExcluded(int i)
+	{
+		return excluded[i - 1];
+	}
+	
+	public void setExcluded(int i, boolean value)
+	{
+		excluded[i - 1] = value;
 	}
 	
 	public EFieldStatus getStatus()
