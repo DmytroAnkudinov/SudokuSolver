@@ -5,6 +5,7 @@ public class Field {
 	private int currentValue;
 	private boolean[] candidates;
 	private boolean[] excluded;
+	private int amountExcluded;
 	
 	public Field(int initialValue)
 	{
@@ -13,6 +14,7 @@ public class Field {
 		this.status = EFieldStatus.EFS_INITIAL;
 		candidates = null;
 		excluded = null;
+		amountExcluded = -1;
 	}
 	
 	public Field()
@@ -29,13 +31,13 @@ public class Field {
 		if (status != EFieldStatus.EFS_GAME)
 			return;
 		
+		amountExcluded = 0;
 		for (int i = 0; i < 9; ++i)
 		{
 			candidates[i] = true;
 			excluded[i] = false;
 		}
 	}
-
 	
 	public int getCurrentValue()
 	{
@@ -72,9 +74,27 @@ public class Field {
 		return excluded[i - 1];
 	}
 	
-	public void setExcluded(int i, boolean value)
+	public void exclude(int i)
 	{
-		excluded[i - 1] = value;
+		if (!excluded[i - 1])
+			amountExcluded++;
+		excluded[i - 1] = true;
+	}
+	
+	public int getAmountExcluded()
+	{
+		return amountExcluded;
+	}
+	
+	public int getNextIncluded(int startValue)
+	{
+		for (int i = startValue; i < 10; ++i)
+		{
+			if (!excluded[i - 1])
+				return i;
+		}
+		
+		return 0;
 	}
 	
 	public EFieldStatus getStatus()

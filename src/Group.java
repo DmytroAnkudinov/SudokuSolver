@@ -11,6 +11,11 @@ public abstract class Group {
 		fields = new Field[9];
 	}
 	
+	public Field getField(int index)
+	{
+		return fields[index];
+	}
+	
 	public boolean runRuleCheck() 
 	{
 		for (int i = 0; i < 8; ++i)
@@ -39,21 +44,8 @@ public abstract class Group {
 					continue;
 				
 				fields[j].setCandidate(fields[i].getCurrentValue(), false);
-				fields[j].setExcluded(fields[i].getCurrentValue(), true);
+				fields[j].exclude(fields[i].getCurrentValue());
 			}
 		}
 	}
-	
-	/*
-	public void updateCandidates()
-	{
-		for (int i = 0; i < 9; ++i)
-		{
-			if (fields[i].getStatus() != EFieldStatus.EFS_GAME)
-			{
-				for (int j = 0; j < )
-			}
-		}
-	}
-	*/
 }

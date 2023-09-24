@@ -102,6 +102,60 @@ public class Engine {
 	{
 		EProcessingStatus result = EProcessingStatus.EPS_NO_NEW_DATA;
 		
+		// Check if a square of a group has only one available candidate
+		for (int i = 0; i < 9; ++i)
+		{
+			Field currentField = currentProcessedGroup.processedGroup.getField(i);
+			if (currentField.isSolved() == EFieldStatus.EFS_UNSOLVED)
+			{
+				for (int number = 1; number < 10; ++number)
+				{
+					if (currentField.getAmountExcluded() == 8)
+					{
+						currentField.setCurrentValue(currentField.getNextIncluded(1));
+						recheckCandidates();
+						result = EProcessingStatus.EPS_FOUND_NEW_DATA;
+					}
+				}
+			}
+		}
+		
+		// Check if a group has only one available location for a candidate
+		{
+			int[] availablePositions = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0};
+			for (int i = 0; i < 9; ++i)
+			{
+				Field currentField = currentProcessedGroup.processedGroup.getField(i);
+				if (currentField.isSolved() == EFieldStatus.EFS_UNSOLVED)
+				{
+					for (int number = 1; number < 10; ++number)
+					{
+						if (!currentField.getExcluded(number))
+							availablePositions[number-1]++;
+					}
+				}
+			}
+			
+			for (int number = 1; number < 10; ++number)
+			{
+				if (availablePositions[number - 1] == 1)
+				{
+					for (int i = 0; i < 9; ++i)
+					{
+						Field currentField = currentProcessedGroup.processedGroup.getField(i);
+						if ((currentField.isSolved() == EFieldStatus.EFS_UNSOLVED) && !currentField.getExcluded(number))
+						{
+							currentField.setCurrentValue(number);
+							recheckCandidates();
+							result = EProcessingStatus.EPS_FOUND_NEW_DATA;
+							break;
+						}
+					}
+				}
+			}
+		}
+		
+		// More complex analysis
 		return result;
 	}
 	
@@ -127,57 +181,83 @@ public class Engine {
 	public EProcessingStatus performOneProcessingRun()
 	{
 		currentProcessingStatus = EProcessingStatus.EPS_IN_PROCESS;
+		
+		recheckCandidates();
 
 		currentProcessedGroup.type = ProcessedGroup.Type.EPGT_ROW;
 		for (currentProcessedGroup.index = 0; currentProcessedGroup.index < 9; ++currentProcessedGroup.index)
 		{
+			currentProcessedGroup.processedGroup = rows[currentProcessedGroup.index];
 			debugText = "Performing processing of the row " + currentProcessedGroup.index;
 			mainFrame.repaint();
-			EProcessingStatus localResult = performOneProcessingStep();
-			if (localResult == EProcessingStatus.EPS_FOUND_NEW_DATA)
-				currentProcessingStatus = EProcessingStatus.EPS_FOUND_NEW_DATA;
+			
 			try {
-				Thread.sleep(500);
+				Thread.sleep(250);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+
+			EProcessingStatus localResult = performOneProcessingStep();
+			if (localResult == EProcessingStatus.EPS_FOUND_NEW_DATA)
+			{
+				mainFrame.updateBoard();
+				currentProcessingStatus = EProcessingStatus.EPS_FOUND_NEW_DATA;
+			}
+
 		}
 		
 		currentProcessedGroup.type = ProcessedGroup.Type.EPGT_COLUMN;
 		for (currentProcessedGroup.index = 0; currentProcessedGroup.index < 9; ++currentProcessedGroup.index)
 		{
+			currentProcessedGroup.processedGroup = columns[currentProcessedGroup.index];
 			debugText = "Performing processing of the column " + currentProcessedGroup.index;
 			mainFrame.repaint();
-			EProcessingStatus localResult = performOneProcessingStep();
-			if (localResult == EProcessingStatus.EPS_FOUND_NEW_DATA)
-				currentProcessingStatus = EProcessingStatus.EPS_FOUND_NEW_DATA;
+			
 			try {
-				Thread.sleep(500);
+				Thread.sleep(250);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			}
+
+			EProcessingStatus localResult = performOneProcessingStep();
+			if (localResult == EProcessingStatus.EPS_FOUND_NEW_DATA)
+			{
+				mainFrame.updateBoard();
+				currentProcessingStatus = EProcessingStatus.EPS_FOUND_NEW_DATA;
 			}
 		}
 		
 		currentProcessedGroup.type = ProcessedGroup.Type.EPGT_SQUARE;
 		for (currentProcessedGroup.index = 0; currentProcessedGroup.index < 9; ++currentProcessedGroup.index)
 		{
+			currentProcessedGroup.processedGroup = squares[currentProcessedGroup.index];
 			debugText = "Performing processing of the square " + currentProcessedGroup.index;
 			mainFrame.repaint();
-			EProcessingStatus localResult = performOneProcessingStep();
-			if (localResult == EProcessingStatus.EPS_FOUND_NEW_DATA)
-				currentProcessingStatus = EProcessingStatus.EPS_FOUND_NEW_DATA;
+
 			try {
-				Thread.sleep(500);
+				Thread.sleep(250);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			
+			EProcessingStatus localResult = performOneProcessingStep();
+			if (localResult == EProcessingStatus.EPS_FOUND_NEW_DATA)
+			{
+				mainFrame.updateBoard();
+				currentProcessingStatus = EProcessingStatus.EPS_FOUND_NEW_DATA;
+			}
+
 		}
 		
 		currentProcessedGroup.type = ProcessedGroup.Type.EPGT_NONE;
 		currentProcessedGroup.index = 0;
+		
+		if (currentProcessingStatus == EProcessingStatus.EPS_IN_PROCESS)
+			currentProcessingStatus = EProcessingStatus.EPS_NO_NEW_DATA;
+		
 		debugText = "Finished processing with the status " + currentProcessingStatus;
 		mainFrame.repaint();
 		
