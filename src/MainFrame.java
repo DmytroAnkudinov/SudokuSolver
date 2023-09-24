@@ -155,6 +155,19 @@ public class MainFrame extends JPanel implements KeyListener {
 	{
 		engine = new Engine(this);
 		
+		engine.initField(0, 1, 8); engine.initField(0, 8, 3);
+		engine.initField(1, 6, 7); engine.initField(1, 8, 1);
+		engine.initField(2, 0, 7); engine.initField(2, 2, 4); engine.initField(2, 5, 9); engine.initField(2, 7, 2); engine.initField(2, 8, 5);
+		
+		engine.initField(3, 2, 8); engine.initField(3, 4, 1);
+		engine.initField(4, 0, 9); engine.initField(4, 5, 8); engine.initField(4, 6, 5); engine.initField(4, 7, 6);
+		engine.initField(5, 3, 2); engine.initField(5, 4, 3);
+		
+		engine.initField(6, 1, 6); engine.initField(6, 6, 2);
+		engine.initField(7, 1, 2); engine.initField(7, 3, 1); engine.initField(7, 5, 3); engine.initField(7, 8, 9);
+		engine.initField(8, 4, 9);
+		 
+		/*
 		engine.initField(0, 0, 6); engine.initField(0, 3, 2); engine.initField(0, 4, 4); engine.initField(0, 7, 8); engine.initField(0, 8, 1);
 		engine.initField(1, 0, 1); engine.initField(1, 1, 2); engine.initField(1, 2, 3); engine.initField(1, 6, 5); engine.initField(1, 7, 6);
 		engine.initField(2, 0, 9); engine.initField(2, 4, 6); engine.initField(2, 5, 1); engine.initField(2, 7, 2); engine.initField(2, 8, 7);
@@ -166,6 +179,7 @@ public class MainFrame extends JPanel implements KeyListener {
 		engine.initField(6, 0, 3); engine.initField(6, 1, 9); engine.initField(6, 2, 1); engine.initField(6, 3, 6);
 		engine.initField(7, 0, 5); engine.initField(7, 3, 3); engine.initField(7, 5, 7); engine.initField(7, 6, 2);
 		engine.initField(8, 2, 4); engine.initField(8, 3, 9); engine.initField(8, 5, 8); engine.initField(8, 7, 1);
+		*/
 		
 		engine.initGroups();
 		
@@ -338,6 +352,20 @@ public class MainFrame extends JPanel implements KeyListener {
 	    	}
 	    }	    
 	}
+	
+	public void updateBoard()
+	{
+	    for (int row = 0; row < 9; ++row)
+	    	for (int column = 0; column < 9; ++column)
+	    	{
+	    		Field currentField = engine.getField(row, column);
+	    		if ((currentField.getStatus() == EFieldStatus.EFS_GAME) && (currentField.isSolved() != EFieldStatus.EFS_UNSOLVED))
+	    			boardFields[row][column].setText(String.valueOf(currentField.getCurrentValue()));
+	    	}
+	    
+	    repaint();
+	}
+
 	
 	
 	@Override
@@ -642,5 +670,5 @@ public class MainFrame extends JPanel implements KeyListener {
 				selectedBoardField.row, selectedBoardField.column, selectedBoardField.index, 
 				engine.getField(row, column).getActualValue(),
 				engine.getField(row, column).getCurrentValue());
-	}
+	}	
 }
