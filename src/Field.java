@@ -3,8 +3,8 @@ public class Field {
 	private EFieldStatus status;
 	private int actualValue;
 	private int currentValue;
-	private boolean[] candidates;
-	private boolean[] excluded;
+	private int candidates;
+	private int excluded;
 	private int amountExcluded;
 	
 	public Field(int initialValue)
@@ -12,8 +12,8 @@ public class Field {
 		this.actualValue = initialValue;
 		this.currentValue = initialValue;
 		this.status = EFieldStatus.EFS_INITIAL;
-		candidates = null;
-		excluded = null;
+		candidates = 0;
+		excluded = 0;
 		amountExcluded = -1;
 	}
 	
@@ -21,8 +21,8 @@ public class Field {
 	{
 		this.actualValue = 0;
 		this.status = EFieldStatus.EFS_GAME;
-		candidates = new boolean[9];
-		excluded = new boolean[9];
+		candidates = 1;
+		excluded = 1;
 		resetCandidates();
 	}
 	
@@ -34,8 +34,8 @@ public class Field {
 		amountExcluded = 0;
 		for (int i = 0; i < 9; ++i)
 		{
-			candidates[i] = true;
-			excluded[i] = false;
+			candidates = (1 << 10) - 1;
+			excluded = 1;
 		}
 	}
 	
@@ -56,29 +56,32 @@ public class Field {
 	
 	public boolean getCandidate(int i)
 	{
-		return candidates[i - 1];
+		return ((candidates & (1 << i)) == (1 << i)) ;
 	}
 	
 	public void setCandidate(int i, boolean value)
 	{
-		candidates[i - 1] = value;
+		if (value)
+			candidates |= (1 << i);
+		else
+			candidates &= ~(1 << i);
 	}
 	
 	public void toggleCandidate(int i)
 	{
-		candidates[i - 1] = !candidates[i - 1];
+		candidates ^= (1 << i);
 	}
 	
 	public boolean getExcluded(int i)
 	{
-		return excluded[i - 1];
+		return ((excluded & (1 << i)) == (1 << i)) ;
 	}
 	
 	public void exclude(int i)
 	{
-		if (!excluded[i - 1])
+		if ((excluded & (1 << i)) == 0)
 			amountExcluded++;
-		excluded[i - 1] = true;
+		excluded |= (1 << i);
 	}
 	
 	public int getAmountExcluded()
@@ -90,7 +93,7 @@ public class Field {
 	{
 		for (int i = startValue; i < 10; ++i)
 		{
-			if (!excluded[i - 1])
+			if ((excluded & (1 << i)) == 0)
 				return i;
 		}
 		
