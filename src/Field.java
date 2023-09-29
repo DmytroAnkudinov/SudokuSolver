@@ -32,11 +32,8 @@ public class Field {
 			return;
 		
 		amountExcluded = 0;
-		for (int i = 0; i < 9; ++i)
-		{
-			candidates = (1 << 10) - 1;
-			excluded = 1;
-		}
+		candidates = (1 << 10) - 1;
+		excluded = 0;
 	}
 	
 	public int getCurrentValue()
@@ -72,9 +69,28 @@ public class Field {
 		candidates ^= (1 << i);
 	}
 	
+	public int getExcludedBitMask()
+	{
+		return excluded;
+	}
+	
+	public void excludeBitMask(int bitMask)
+	{
+		excluded = (excluded | bitMask) & (1022);
+		
+		amountExcluded = 0;
+		int temp = excluded;
+		while (temp > 0)
+		{
+			if ((temp & 1) == 1)
+				amountExcluded++;
+			temp = temp >> 1;
+		}
+	}
+	
 	public boolean getExcluded(int i)
 	{
-		return ((excluded & (1 << i)) == (1 << i)) ;
+		return ((excluded & (1 << i)) == (1 << i));
 	}
 	
 	public void exclude(int i)
