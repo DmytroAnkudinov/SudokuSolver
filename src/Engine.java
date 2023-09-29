@@ -102,6 +102,46 @@ public class Engine {
 	{
 		EProcessingStatus result = EProcessingStatus.EPS_NO_NEW_DATA;
 		
+		// More complex analysis
+		{
+			for (int i = 0; i < 9; ++i)
+			{
+				Field currentField = currentProcessedGroup.processedGroup.getField(i);
+				if (currentField.isSolved() == EFieldStatus.EFS_UNSOLVED)
+				{
+					if (currentField.getAmountExcluded() > 4)
+					{
+						int groupSize = 0;
+						for (int j = 0; j < 9; ++j)
+						{
+							Field checkedField = currentProcessedGroup.processedGroup.getField(j);
+							if (checkedField.isSolved() != EFieldStatus.EFS_UNSOLVED)
+								continue;
+							if ((~currentField.getExcludedBitMask() & ~checkedField.getExcludedBitMask()) == 
+									~checkedField.getExcludedBitMask())
+								groupSize++;
+						}
+						
+						if (groupSize == 9 - currentField.getAmountExcluded())
+						{
+							for (int j = 0; j < 9; ++j)
+							{
+								Field checkedField = currentProcessedGroup.processedGroup.getField(j);
+								if (checkedField.isSolved() != EFieldStatus.EFS_UNSOLVED)
+									continue;
+								if ((~currentField.getExcludedBitMask() & ~checkedField.getExcludedBitMask()) != 
+										~checkedField.getExcludedBitMask())
+								{
+									checkedField.excludeBitMask(~currentField.getExcludedBitMask());
+									result = EProcessingStatus.EPS_FOUND_NEW_DATA;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
 		// Check if a square of a group has only one available candidate
 		for (int i = 0; i < 9; ++i)
 		{
@@ -155,7 +195,6 @@ public class Engine {
 			}
 		}
 		
-		// More complex analysis
 		return result;
 	}
 	

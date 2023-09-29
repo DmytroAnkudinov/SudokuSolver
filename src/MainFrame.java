@@ -155,6 +155,18 @@ public class MainFrame extends JPanel implements KeyListener {
 	{
 		engine = new Engine(this);
 		
+		engine.initField(0, 3, 6); engine.initField(0, 4, 8);
+		engine.initField(1, 1, 1); engine.initField(1, 3, 3); engine.initField(1, 6, 2);
+		engine.initField(2, 4, 5); engine.initField(2, 5, 7); engine.initField(2, 7, 3);
+		
+		engine.initField(3, 0, 2); engine.initField(3, 6, 9); engine.initField(3, 8, 7);
+		engine.initField(4, 2, 8); engine.initField(4, 6, 4);
+		engine.initField(5, 0, 3); engine.initField(5, 2, 7);
+		
+		engine.initField(6, 0, 9); engine.initField(6, 5, 6); engine.initField(6, 6, 7);
+		engine.initField(7, 1, 5); engine.initField(7, 2, 1); engine.initField(7, 3, 9); engine.initField(7, 5, 3); engine.initField(7, 8, 8);
+		
+		/*
 		engine.initField(0, 1, 8); engine.initField(0, 8, 3);
 		engine.initField(1, 6, 7); engine.initField(1, 8, 1);
 		engine.initField(2, 0, 7); engine.initField(2, 2, 4); engine.initField(2, 5, 9); engine.initField(2, 7, 2); engine.initField(2, 8, 5);
@@ -166,6 +178,7 @@ public class MainFrame extends JPanel implements KeyListener {
 		engine.initField(6, 1, 6); engine.initField(6, 6, 2);
 		engine.initField(7, 1, 2); engine.initField(7, 3, 1); engine.initField(7, 5, 3); engine.initField(7, 8, 9);
 		engine.initField(8, 4, 9);
+		*/
 		 
 		/*
 		engine.initField(0, 0, 6); engine.initField(0, 3, 2); engine.initField(0, 4, 4); engine.initField(0, 7, 8); engine.initField(0, 8, 1);
