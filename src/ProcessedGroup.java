@@ -3,6 +3,6 @@ public class ProcessedGroup {
 	
 	public Type  type = Type.EPGT_NONE;
 	public int   index = 0;
-	public Group processedGroup;
+	public Group group;
 	
 }
