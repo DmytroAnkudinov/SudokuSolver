@@ -15,6 +15,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
 
 public class MainFrame extends JPanel implements KeyListener {
@@ -45,7 +46,7 @@ public class MainFrame extends JPanel implements KeyListener {
 	private static final int FIELD_LENGTH = SQUARE_EDGE_LENGTH * 9 + ORDINARY_LINE_THICKNESS * 6 + SEPARATION_LINE_THICKNESS * 4;
 	
 	private static final int NUMBERPAD_UPPER_LEFT_CORNER_X = 700;
-	private static final int NUMBERPAD_UPPER_LEFT_CORNER_Y = 100;
+	private static final int NUMBERPAD_UPPER_LEFT_CORNER_Y = 50;
 	
 	private static final int BUTTON_WIDTH = SQUARE_EDGE_LENGTH * 3 + ORDINARY_LINE_THICKNESS * 2;
 	private static final int BUTTON_HEIGHT = SQUARE_EDGE_LENGTH / 2;
@@ -61,7 +62,9 @@ public class MainFrame extends JPanel implements KeyListener {
 	private Font smallFont = new Font("Roboto", Font.PLAIN, 12);
 	
 	private JCheckBox checkCandidatesCheckBox = null;
-	
+	private JProgressBar solvedProgressBar = null;
+	private Thread processingThread = null;
+
 	private boolean isCandidatesEnabled = true;
 	private boolean isCandidatesChecked = false;
 	
@@ -151,7 +154,7 @@ public class MainFrame extends JPanel implements KeyListener {
 	};
 
 	
-	public MainFrame(JFrame mainFrame) 
+	public MainFrame() 
 	{
 		engine = new Engine(this);
 		
@@ -246,11 +249,47 @@ public class MainFrame extends JPanel implements KeyListener {
 			});
 			add(deleteButton);
 			
+			JButton solvePuzzleButton = new JButton();
 			JButton runProcessingOnceButton = new JButton();
 			
-			runProcessingOnceButton.setBounds(deleteButton.getBounds().x, (int)(deleteButton.getBounds().y+1.5*BUTTON_HEIGHT),
+			solvePuzzleButton.setBounds(deleteButton.getBounds().x, (int)(deleteButton.getBounds().y+1.5*BUTTON_HEIGHT),
 											  BUTTON_WIDTH, BUTTON_HEIGHT);
-			runProcessingOnceButton.setText("Run processing once");
+			solvePuzzleButton.setText("Solve the puzzle");
+			solvePuzzleButton.setFont(smallFont);
+			solvePuzzleButton.setHorizontalAlignment(JButton.CENTER);
+			solvePuzzleButton.setFocusable(false);
+			solvePuzzleButton.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					if (processingThread != null)
+					{
+						solvePuzzleButton.setText("Solve the puzzle");
+						runProcessingOnceButton.setText("Analyze Sudoku once");
+						engine.terminateProcessing();
+						processingThread = null;
+					}
+					else
+					{
+						solvePuzzleButton.setText("Stop solving");
+						processingThread = new Thread(new Runnable() {
+					        @Override public void run() {
+					        	engine.performFullProcessing();
+								solvePuzzleButton.setText("Solve the puzzle");
+								runProcessingOnceButton.setText("Analyze Sudoku once");
+					        	processingThread = null;
+					        }
+					    });
+						processingThread.start();
+					}
+				}
+			});
+			
+			add(solvePuzzleButton);
+
+			runProcessingOnceButton.setBounds(solvePuzzleButton.getBounds().x, (int)(solvePuzzleButton.getBounds().y+1.5*BUTTON_HEIGHT),
+											  BUTTON_WIDTH, BUTTON_HEIGHT);
+			runProcessingOnceButton.setText("Analyze Sudoku once");
 			runProcessingOnceButton.setFont(smallFont);
 			runProcessingOnceButton.setHorizontalAlignment(JButton.CENTER);
 			runProcessingOnceButton.setFocusable(false);
@@ -258,11 +297,26 @@ public class MainFrame extends JPanel implements KeyListener {
 				
 				@Override
 				public void actionPerformed(ActionEvent e) {
-				    new Thread(new Runnable() {
-				        @Override public void run() {
-				        	engine.performOneProcessingRun();
-				        }
-				    }).start();
+					if (processingThread != null)
+					{
+						solvePuzzleButton.setText("Solve the puzzle");
+						runProcessingOnceButton.setText("Analyze Sudoku once");
+						engine.terminateProcessing();
+						processingThread = null;
+					}
+					else
+					{
+						runProcessingOnceButton.setText("Stop analyzing");
+						processingThread = new Thread(new Runnable() {
+					        @Override public void run() {
+					        	engine.performOneProcessingRun();
+								solvePuzzleButton.setText("Solve the puzzle");
+								runProcessingOnceButton.setText("Analyze Sudoku once");
+					        	processingThread = null;
+					        }
+					    });
+						processingThread.start();
+					}
 				}
 			});
 			
@@ -327,6 +381,25 @@ public class MainFrame extends JPanel implements KeyListener {
 			});
 
 			add(checkCandidatesCheckBox);
+			
+			JLabel solvedProgressBarLabel = new JLabel("Sudoku solved");
+			solvedProgressBarLabel.setBounds(checkCandidatesLabel.getBounds().x, (int)(checkCandidatesLabel.getBounds().y+1.5*BUTTON_HEIGHT), 
+					BUTTON_WIDTH, solvedProgressBarLabel.getPreferredSize().height);
+			solvedProgressBarLabel.setFocusable(false);
+			solvedProgressBarLabel.setHorizontalAlignment(JLabel.CENTER);
+
+			add(solvedProgressBarLabel);
+
+			solvedProgressBar = new JProgressBar(0, 81);
+			solvedProgressBar.setBounds(solvedProgressBarLabel.getBounds().x, (int)(solvedProgressBarLabel.getBounds().y+1.5*solvedProgressBarLabel.getBounds().height), 
+					BUTTON_WIDTH, solvedProgressBarLabel.getPreferredSize().height);
+			solvedProgressBar.setStringPainted(true);
+			solvedProgressBar.setFocusable(false);
+			
+			solvedProgressBar.setValue(engine.calculateFilled());
+
+			add(solvedProgressBar);
+
 		}
 		
 		boardFields = new IndexedLabel[9][9];
@@ -376,6 +449,7 @@ public class MainFrame extends JPanel implements KeyListener {
 	    			boardFields[row][column].setText(String.valueOf(currentField.getCurrentValue()));
 	    	}
 	    
+	    solvedProgressBar.setValue(engine.calculateFilled());
 	    repaint();
 	}
 
@@ -563,7 +637,7 @@ public class MainFrame extends JPanel implements KeyListener {
 		 JFrame mainFrame = new JFrame();
 	     mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	     mainFrame.setSize(1024, 800);
-	     MainFrame mainFrameEngine = new MainFrame(mainFrame);
+	     MainFrame mainFrameEngine = new MainFrame();
 	     mainFrame.getContentPane().add(mainFrameEngine);
 	     mainFrame.addKeyListener(mainFrameEngine);
 	     mainFrame.setResizable(false);
@@ -677,6 +751,8 @@ public class MainFrame extends JPanel implements KeyListener {
 			boardFields[row][column].setText("");
 			engine.setFieldCurrentValue(row, column, 0);
 		}
+		
+	    solvedProgressBar.setValue(engine.calculateFilled());
 		
 		engine.debugText = engine.debugText = String.format("ROW : %d | COLUMN : %d | INDEX : %d | "
 				+ "actualValue : %d | currentValue : %s", 
