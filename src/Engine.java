@@ -1,5 +1,5 @@
 public class Engine {
-	private MainFrame mainFrame;
+	private MainScreen mainScreen;
 	private Field[][] field = new Field[9][9];
 	
 	private GroupHorizontal[] rows = new GroupHorizontal[9];
@@ -12,9 +12,9 @@ public class Engine {
 	
 	public String debugText = "DEBUG";
 	
-	public Engine(MainFrame mainFrame)
+	public Engine(MainScreen mainScreen)
 	{
-		this.mainFrame = mainFrame;
+		this.mainScreen = mainScreen;
 		Group.parent = this;
 		for (int row = 0; row < 9; ++row)
 			for (int column = 0; column < 9; ++column)
@@ -256,7 +256,7 @@ public class Engine {
 		{
 			currentProcessedGroup.group = groups[currentProcessedGroup.index];
 			debugText = debugTextPrefix + currentProcessedGroup.index;
-			mainFrame.repaint();
+			mainScreen.repaint();
 			
 			try {
 				Thread.sleep(250);
@@ -271,7 +271,7 @@ public class Engine {
 			EProcessingStatus localResult = performOneProcessingStep();
 			if (localResult == EProcessingStatus.EPS_FOUND_NEW_DATA)
 			{
-				mainFrame.updateBoard();
+				mainScreen.updateBoard();
 				if (calculateFilled() == 81)
 				{
 					currentProcessingResult = EProcessingStatus.EPS_SOLVED;
@@ -313,7 +313,7 @@ public class Engine {
 		}
 		
 		debugText = "Finished processing with the result " + currentProcessingResult;
-		mainFrame.repaint();
+		mainScreen.repaint();
 
 		if (currentProcessingStatus != EProcessingStatus.EPS_TERMINATED)
 			currentProcessingStatus = EProcessingStatus.EPS_OFF;
